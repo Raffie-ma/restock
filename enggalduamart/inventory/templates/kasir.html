@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+
+<div class="container mt-4">
+    <h3 class="mb-4 fw-bold">Kasir Penjualan</h3>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <form method="POST" action="{% url 'tambah_keranjang' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Barang</label>
+                            <select name="barang" class="form-select select2">
+                                <option value="">Pilih Barang</option>
+                                {% for barang in barangs %}
+                                    <option value="{{ barang.kode_barang }}">
+                                        {{ barang.nama_barang }} - Rp {{ barang.harga|intcomma }} (stok {{ barang.stock }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah</label>
+                            <input type="number"name="jumlah"class="form-control" min="1"required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            Tambah
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="mb-3 fw-semibold">Keranjang</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Barang</th>
+                                    <th>Qty</th>
+                                    <th>Harga</th>
+                                    <th>Subtotal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for item in keranjang %}
+                                <tr>
+                                    <td>{{ item.nama }}</td>
+                                    <td>{{ item.jumlah }}</td>
+                                    <td>Rp {{ item.harga|intcomma }}</td>
+                                    <td>Rp {{ item.subtotal|intcomma }}</td>
+                                    <td>
+                                        <a href="{% url 'hapus_dari_keranjang' forloop.counter0 %}"
+                                           class="btn btn-sm btn-danger">
+                                           x
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        Keranjang kosong
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 class="text-end fw-bold mt-3">
+                        Total: Rp {{ total|intcomma }}
+                    </h4>
+
+                    <form id="formBayar"method="POST"action="{% url 'proses_bayar' %}">
+                        {% csrf_token %}
+                        <input type="hidden"name="uang_bayar"id="uang_bayar">
+                        <button type="submit"class="btn btn-success w-100 mt-2">
+                            Proses Pembayaran
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.getElementById('formBayar').addEventListener('submit', async function(e) {
+
+    e.preventDefault();
+    let total = {{ total }};
+    const { value: bayar } = await Swal.fire({
+    title: '<h3 style="font-weight:bold;">PEMBAYARAN</h3>',
+
+    html: `
+        <div style="text-align:left;font-size:18px;margin-top:10px;">
+            <hr>
+            <div style="display:flex;justify-content:space-between; margin-bottom:15px;">
+                <span>Total Harga</span>
+                <span><b>Rp ${total.toLocaleString()}</b></span>
+            </div>
+            <hr>
+        </div>
+    `,
+    input: 'number',
+    inputLabel: 'Masukkan Nominal Pembayaran',
+    inputPlaceholder: 'Masukan Nominal',
+    confirmButtonText: 'Bayar',
+    cancelButtonText: 'Batal',
+    showCancelButton: true,
+    inputAttributes: {
+        min: total
+    }
+});
+    if (!bayar) {
+        return;
+    }
+
+    let nominal = parseInt(bayar);
+
+    if (isNaN(nominal)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Nominal tidak valid!'
+        });
+        return;
+    }
+
+    if (nominal < total) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Uang Kurang',
+            text: 'Nominal pembayaran kurang!'
+        });
+        return;
+    }
+
+    document.getElementById('uang_bayar').value = nominal;
+    let kembalian = nominal - total;
+    await Swal.fire({
+    icon: 'success',
+    title: 'Pembayaran Berhasil',
+    html: `
+        <div style="text-align:left;font-size:18px;line-height:1.8;">
+            <hr>
+            <div style="display:flex; justify-content:space-between;">
+                <span>Total</span>
+                <span>: Rp ${total.toLocaleString()}</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between;">
+                <span>Bayar</span>
+                <span>: Rp ${nominal.toLocaleString()}</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between;">
+                <span>Kembalian</span>
+                <span>: Rp ${kembalian.toLocaleString()}</span>
+            </div>
+            <hr>
+        </div>
+    `
+});
+    this.submit();
+
+})
+</script>
+{% endblock %}
