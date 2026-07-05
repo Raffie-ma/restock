@@ -402,7 +402,7 @@ def pemesanan_verifikasi(request, pk, aksi):
 @transaction.atomic
 def barang_datang_konfirmasi(request, pk):
 
-    pemesanan = get_object_or_404(Pemesanan,pk=pk,ser_2_id=request.session.get('user_id'))
+    pemesanan = get_object_or_404(Pemesanan,pk=pk,user_2=request.session.get('user_id'))
 
     if pemesanan.status_2 != 'disetujui':
         return redirect('pemesanan_list')
