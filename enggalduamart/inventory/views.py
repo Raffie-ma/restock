@@ -309,26 +309,30 @@ class PemesananForm(forms.ModelForm):
 @require_role('karyawan')
 def pemesanan_create(request, kode_barang):
     barang = get_object_or_404(Barang, pk=kode_barang)
-    user = get_object_or_404(User, pk=request.session.get('user_id'))  
+    user = get_object_or_404(User, pk=request.session.get('user_id'))
 
     if request.method == 'POST':
         form = PemesananForm(request.POST)
         if form.is_valid():
             pemesanan = form.save(commit=False)
-            pemesanan.barang = barang              
-            pemesanan.user_2 = user                
-            pemesanan.status_2 = 'pending'
-            pemesanan.save()
-            return redirect('pemesanan_list')
+            if pemesanan.jumlah <= 0:
+                form.add_error('jumlah','Jumlah pemesanan harus lebih dari 0.')
+            else:
+                pemesanan.barang = barang
+                pemesanan.user_2 = user
+                pemesanan.status_2 = 'pending'
+                pemesanan.save()
+
+                return redirect('pemesanan_list')
+
     else:
         form = PemesananForm()
 
     return render(request, 'pemesanan_form.html', {
         'form': form,
         'barang': barang,
-        'role' : 'karyawan'
+        'role': 'karyawan'
     })
-
 
 @require_login
 def pemesanan_list(request):
