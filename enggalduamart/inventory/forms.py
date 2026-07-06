@@ -47,17 +47,12 @@ class BarangForm(forms.ModelForm):
         model = Barang
 
         fields = [
-            'kategori',
             'nama_barang',
             'stock',
             'harga'
         ]
 
         widgets = {
-
-            'kategori': forms.Select(attrs={
-                'class': 'form-select'
-            }),
 
             'nama_barang': forms.TextInput(attrs={
                 'class': 'form-control'
