@@ -15,6 +15,7 @@ from .models import KategoriBarang
 from django.views.decorators.csrf import csrf_exempt
 
 
+
 @csrf_exempt
 def login_view(request):
     if request.method == 'POST':
@@ -96,7 +97,9 @@ def dashboard(request):
     total_stok = Barang.objects.aggregate(total=Sum('stock'))['total'] or 0
     total_nilai = Barang.objects.annotate(nilai=ExpressionWrapper( F('stock') * F('harga'),output_field=DecimalField())).aggregate(total=Sum('nilai'))['total'] or 0
     today = timezone.now()
-    barang_terlaris = (DetailPenjualan.objects.filter(transaksi__tanggal__month=today.month,transaksi__tanggal__year=today.year).values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5])
+    barang_terlaris = (DetailPenjualan.objects.filter(transaksi__tanggal__month=today.month,transaksi__tanggal__year=today.year).values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5]
+)
+    
     context = {
         'role': role,
         'barang_list': barang_list,
@@ -232,8 +235,9 @@ def barang_create(request):
             'role': request.session.get('role'),
         }
     )
+
 @require_login
-@require_role('admin')
+@require_role('admin','karyawan')
 def barang_update(request, kode_barang):
     barang = get_object_or_404(Barang, pk=kode_barang)
     stok_lama = barang.stock  
@@ -263,7 +267,7 @@ def barang_update(request, kode_barang):
     return render(request, 'barang_form.html', {
         'form': form,
         'judul': 'Edit Barang',
-        'role' : 'admin'
+        'role' : request.session.get('role')
         })
 
 
@@ -322,6 +326,7 @@ def pemesanan_create(request, kode_barang):
         'barang': barang,
         'role': 'karyawan'
     })
+
 
 @require_login
 def pemesanan_list(request):
@@ -394,9 +399,7 @@ def pemesanan_verifikasi(request, pk, aksi):
 @require_role('karyawan')
 @transaction.atomic
 def barang_datang_konfirmasi(request, pk):
-
-    pemesanan = get_object_or_404(Pemesanan,pk=pk,user_2=request.session.get('user_id'))
-
+    pemesanan = get_object_or_404(Pemesanan,pk=pk,user_2_id=request.session.get('user_id'))
     if pemesanan.status_2 != 'disetujui':
         return redirect('pemesanan_list')
 
@@ -427,7 +430,6 @@ def barang_datang_konfirmasi(request, pk):
             elif jumlah_datang > pemesanan.jumlah:
                 form.add_error('jumlah_datang','Jumlah datang tidak boleh melebihi jumlah pesanan')
             else:
-
                 pemesanan = form.save(commit=False)
                 pemesanan.jumlah_datang = jumlah_datang
                 pemesanan.status_2 = 'datang'
@@ -450,11 +452,7 @@ def barang_datang_konfirmasi(request, pk):
                         status='disetujui'
                     )
 
-                messages.success(
-                    request,
-                    "Barang datang berhasil dikonfirmasi"
-                )
-
+                messages.success(request,"Barang datang berhasil dikonfirmasi")
                 return redirect('pemesanan_list')
 
         return render(request, 'barang_datang_form.html', {
@@ -535,7 +533,6 @@ def tambah_retur(request):
         jumlah = int(request.POST.get('jumlah'))
         alasan = request.POST.get('alasan')
         keterangan = request.POST.get('keterangan')
-
         barang = get_object_or_404(Barang, kode_barang=kode_barang)
         user_id = request.session.get('user_id')
         user = get_object_or_404(User, id=user_id)
@@ -643,7 +640,6 @@ def hapus_dari_keranjang(request, index):
 def proses_bayar(request):
 
     keranjang = request.session.get('keranjang', [])
-
     if not keranjang:
         messages.error(request, "Keranjang kosong")
         return redirect('kasir')
@@ -697,3 +693,4 @@ def proses_bayar(request):
     kembalian = uang_bayar - total
     request.session['keranjang'] = []
     return redirect('kasir')
+
