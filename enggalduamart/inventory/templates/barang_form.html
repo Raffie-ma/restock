@@ -5,61 +5,76 @@
 <div class="container mt-4">
 <h3 class="mb-3">{{ judul }}</h3>
 <div class="card shadow-sm">
-  <div class="card-body">
+<div class="card-body">
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert
+            {% if message.tags == 'error' %}
+                alert-danger
+            {% else %}
+                alert-{{ message.tags }}
+            {% endif %} mt-3 fw-semibold"
+            role="alert">
+            {{ message }}
+            <script>
+              setTimeout(function () {
+                  document.querySelectorAll('.alert').forEach(function (alert) {
+                      alert.remove();
+                  });
+              }, 3000);
+            </script>
+        </div>
+    {% endfor %}
+{% endif %}
 
-    <form method="post">
-      {% csrf_token %}
-
-      {% if judul == 'Edit Barang' %}
-      <div class="mb-3">
-        <label class="form-label">Kode Barang</label>
-
-        <span class="form-control bg-light">
-          {{ form.instance.kode_barang }}
-        </span>
-      </div>
-      {% endif %}
-      {% if judul != 'Edit Barang' %}
-      <hr>
-      <h6 class="mb-3">Tambah Kategori Baru</h6>
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Nama Kategori</label>
+<form method="post">
+{% csrf_token %}
+{% if judul == 'Edit Barang' %}
+  <div class="mb-3">
+    <label class="form-label">Kode Barang</label>
+      <span class="form-control bg-light">
+        {{ form.instance.kode_barang }}
+      </span>
+  </div>
+{% endif %}
+{% if judul != 'Edit Barang' %}
+<hr>
+  <h6 class="mb-3">Tambah Kategori Baru</h6>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Nama Kategori</label>
           <input
             type="text"
             name="nama_kategori_baru"
             class="form-control"
             placeholder="Contoh: Minuman"
           >
-        </div>
-
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Kode Awal</label>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Kode Awal</label>
           <input
             type="text"
             name="kode_awal_baru"
             class="form-control"
             placeholder="Contoh: 354"
           >
-        </div>
       </div>
-
-      <small class="text-muted">
+    </div>
+    <small class="text-muted">
         Isi bagian ini jika ingin membuat kategori baru.
-      </small>
-      <hr>
-      <select name="kategori" class="form-select">
-        <option value="">-- Pilih Kategori --</option>
+    </small>
+    <hr>
+    <select name="kategori" class="form-select">
+      <option value="">-- Pilih Kategori --</option>
         {% for kategori in kategori_list %}
           <option value="{{ kategori.id }}">
             {{ kategori.nama_kategori }}
           </option>
         {% endfor %}
-      </select>
-      <br>
-      {% endif %}
+    </select>
+    <br>
+    {% endif %}
 
-  
       <div class="mb-3">
         <label class="form-label">Nama Barang</label>
         {{ form.nama_barang }}
@@ -69,22 +84,17 @@
         <label class="form-label">Stock</label>
         {{ form.stock }}
       </div>
-
       <div class="mb-3">
         <label class="form-label">Harga</label>
         {{ form.harga }}
       </div>
-
       <button type="submit" class="btn btn-primary">
         Simpan
       </button>
-
       <a href="{% url 'dashboard' %}" class="btn btn-secondary">
         Batal
       </a>
-
     </form>
-
   </div>
 </div>
 

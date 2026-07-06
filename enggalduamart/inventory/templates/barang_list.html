@@ -9,6 +9,13 @@
       {% if 'success_barang' in message.tags or 'success_batas' in message.tags %}
         <div class="alert alert-success fade show mb-2">
           {{ message }}
+             <script>
+              setTimeout(function () {
+                  document.querySelectorAll('.alert').forEach(function (alert) {
+                      alert.remove();
+                  });
+              }, 3000);
+            </script>
         </div>
       {% endif %}
     {% endfor %}

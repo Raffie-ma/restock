@@ -172,46 +172,37 @@ def barang_create(request):
     kategori_list = KategoriBarang.objects.all()
     if request.method == 'POST':
         form = BarangForm(request.POST)
-        nama_kategori_baru = request.POST.get('nama_kategori_baru', '').strip()
+        nama_kategori_baru = request.POST.get('nama_kategori_baru', '' ).strip()
         kode_awal_baru = request.POST.get('kode_awal_baru', '').strip()
-
         kategori_id = request.POST.get('kategori')
+
+        if not kategori_id and not (nama_kategori_baru and kode_awal_baru):
+            messages.error(request,"Pilih kategori atau buat kategori baru.")
+
+            return render(request,'barang_create.html',
+                {
+                    'form': form,
+                    'judul': 'Tambah Barang',
+                    'kategori_list': kategori_list,
+                    'role': request.session.get('role'),
+                }
+            )
+
         if form.is_valid():
             try:
                 barang = form.save(commit=False)
                 if nama_kategori_baru and kode_awal_baru:
-
-                    kategori, created = KategoriBarang.objects.get_or_create(
-                        kode_awal=kode_awal_baru,
-                        defaults={
-                            'nama_kategori': nama_kategori_baru
-                        }
-                    )
-
+                    kategori, created = KategoriBarang.objects.get_or_create(kode_awal=kode_awal_baru,defaults={'nama_kategori': nama_kategori_baru})
                     barang.kategori = kategori
                 else:
-                    if not kategori_id:
-                        messages.error(request,"Pilih kategori atau buat kategori baru.")
-                        return render(
-                            request,
-                            'barang_form.html',
-                            {
-                                'form': form,
-                                'judul': 'Tambah Barang',
-                                'kategori_list': kategori_list,
-                            }
-                        )
-                    kategori = KategoriBarang.objects.get(
-                        id=kategori_id
-                    )
-
+                    kategori = KategoriBarang.objects.get(id=kategori_id)
                     barang.kategori = kategori
+
                 barang.save()
 
                 if barang.stock <= barang.batas_minimal:
                     karyawan_list = User.objects.filter(role='karyawan')
                     for user in karyawan_list:
-
                         Notifikasi.objects.get_or_create(
                             user=user,
                             barang=barang,
@@ -219,31 +210,28 @@ def barang_create(request):
                             dibaca=False
                         )
 
-                messages.success(request,"Barang berhasil ditambahkan")
-                return redirect('barang_list')
-
+                messages.success( request,"Barang berhasil ditambahkan.")
+                return redirect('barang_create')
             except IntegrityError as e:
                 messages.error(request,f"Terjadi kesalahan database: {e}")
-
             except Exception as e:
                 messages.error(request,f"Error: {e}")
         else:
             print(form.errors)
-            messages.error(request,"Data tidak valid." )
+            messages.error(request,"Data tidak valid.")
     else:
         form = BarangForm()
+
     return render(
         request,
-        'barang_form.html',
+        'barang_create.html',
         {
             'form': form,
             'judul': 'Tambah Barang',
             'kategori_list': kategori_list,
-            'role': 'admin'
+            'role': request.session.get('role'),
         }
     )
-
-
 @require_login
 @require_role('admin')
 def barang_update(request, kode_barang):
