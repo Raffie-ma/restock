@@ -24,16 +24,8 @@ class KategoriBarang(models.Model):
 
 class Barang(models.Model):
 
-    kategori = models.ForeignKey(
-        KategoriBarang,
-        on_delete=models.CASCADE
-    )
-
-    kode_barang = models.IntegerField(
-        primary_key=True,
-        editable=False
-    )
-
+    kategori = models.ForeignKey(KategoriBarang,on_delete=models.CASCADE)
+    kode_barang = models.IntegerField(primary_key=True,editable=False)
     nama_barang = models.CharField(max_length=100)
     stock = models.IntegerField()
     harga = models.DecimalField(max_digits=12, decimal_places=2)
