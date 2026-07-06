@@ -80,6 +80,7 @@ def dashboard(request):
     pencarian = request.GET.get('pencarian', '')
     transaksi = TransaksiKeuangan.objects.filter()
     pemasukan = transaksi.filter(jenis='masuk').aggregate(total=Sum('total'))['total'] or 0
+    
     if pencarian:
         barang_list = barang_list.filter(
             Q(nama_barang__icontains=pencarian)|Q(kode_barang__icontains=pencarian))
@@ -94,8 +95,8 @@ def dashboard(request):
     barang_menipis = Barang.objects.filter(stock__lte=F('batas_minimal')).count()
     total_stok = Barang.objects.aggregate(total=Sum('stock'))['total'] or 0
     total_nilai = Barang.objects.annotate(nilai=ExpressionWrapper( F('stock') * F('harga'),output_field=DecimalField())).aggregate(total=Sum('nilai'))['total'] or 0
-    barang_terlaris = (DetailPenjualan.objects.values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5])
-    
+    today = timezone.now()
+    barang_terlaris = (DetailPenjualan.objects.filter(transaksi__tanggal__month=today.month,transaksi__tanggal__year=today.year).values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5])
     context = {
         'role': role,
         'barang_list': barang_list,
