@@ -15,7 +15,6 @@ from .models import KategoriBarang
 from django.views.decorators.csrf import csrf_exempt
 
 
-
 @csrf_exempt
 def login_view(request):
     if request.method == 'POST':
@@ -68,8 +67,6 @@ def require_role(*allowed_roles):
         return wrapper
     return decorator
 
-
-
 @require_login
 def dashboard(request):
     role = request.session.get('role')
@@ -81,10 +78,17 @@ def dashboard(request):
     pencarian = request.GET.get('pencarian', '')
     transaksi = TransaksiKeuangan.objects.filter()
     pemasukan = transaksi.filter(jenis='masuk').aggregate(total=Sum('total'))['total'] or 0
-    
+    total_barang = Barang.objects.count()
+    barang_menipis = Barang.objects.filter(stock__lte=F('batas_minimal')).count()
+    total_stok = Barang.objects.aggregate(total=Sum('stock'))['total'] or 0
+    total_nilai = Barang.objects.annotate(nilai=ExpressionWrapper( F('stock') * F('harga'),output_field=DecimalField())).aggregate(total=Sum('nilai'))['total'] or 0
+    today = timezone.now()
+    barang_terlaris = (DetailPenjualan.objects.filter(transaksi__tanggal__month=today.month,transaksi__tanggal__year=today.year).values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5])
+
     if pencarian:
         barang_list = barang_list.filter(
             Q(nama_barang__icontains=pencarian)|Q(kode_barang__icontains=pencarian))
+            
     
     if filter_barang == 'menipis':
         barang_list = barang_list.filter(
@@ -92,13 +96,6 @@ def dashboard(request):
         stock__gt=0
     )
     
-    total_barang = Barang.objects.count()
-    barang_menipis = Barang.objects.filter(stock__lte=F('batas_minimal')).count()
-    total_stok = Barang.objects.aggregate(total=Sum('stock'))['total'] or 0
-    total_nilai = Barang.objects.annotate(nilai=ExpressionWrapper( F('stock') * F('harga'),output_field=DecimalField())).aggregate(total=Sum('nilai'))['total'] or 0
-    today = timezone.now()
-    barang_terlaris = (DetailPenjualan.objects.filter(transaksi__tanggal__month=today.month,transaksi__tanggal__year=today.year).values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5]
-)
     
     context = {
         'role': role,
@@ -215,10 +212,10 @@ def barang_create(request):
 
                 messages.success( request,"Barang berhasil ditambahkan.")
                 return redirect('barang_create')
-            except IntegrityError as e:
-                messages.error(request,f"Terjadi kesalahan database: {e}")
-            except Exception as e:
-                messages.error(request,f"Error: {e}")
+            except IntegrityError:
+                 messages.error(request, "Data gagal disimpan.")
+            except Exception:
+                messages.error(request, "Terjadi kesalahan pada sistem.")
         else:
             print(form.errors)
             messages.error(request,"Data tidak valid.")
@@ -264,7 +261,7 @@ def barang_update(request, kode_barang):
     else:
         form = BarangForm(instance=barang)
 
-    return render(request, 'barang_form.html', {
+    return render(request, 'barang_create.html', {
         'form': form,
         'judul': 'Edit Barang',
         'role' : request.session.get('role')
@@ -379,7 +376,6 @@ def pemesanan_verifikasi(request, pk, aksi):
         pemesanan.status_2 = 'disetujui'
         pemesanan.save()
 
-        
         user_id = request.session.get('user_id')
         if user_id:
             Notifikasi.objects.create(
@@ -404,10 +400,9 @@ def barang_datang_konfirmasi(request, pk):
         return redirect('pemesanan_list')
 
     if request.method == 'GET':
-
         form = BarangDatangForm(instance=pemesanan)
 
-        return render(request, 'barang_datang_form.html', {
+        return render(request, 'barang_datang.html', {
             'form': form,
             'pemesanan': pemesanan,
             'role' :'karyawan'
@@ -427,8 +422,6 @@ def barang_datang_konfirmasi(request, pk):
             if jumlah_datang <= 0:
                 form.add_error('jumlah_datang','Jumlah datang harus lebih dari 0')
 
-            elif jumlah_datang > pemesanan.jumlah:
-                form.add_error('jumlah_datang','Jumlah datang tidak boleh melebihi jumlah pesanan')
             else:
                 pemesanan = form.save(commit=False)
                 pemesanan.jumlah_datang = jumlah_datang
@@ -439,7 +432,6 @@ def barang_datang_konfirmasi(request, pk):
                 barang.save()
 
                 if jumlah_rusak > 0:
-
                     user_id = request.session.get('user_id')
                     user = get_object_or_404(User, id=user_id)
 
@@ -455,7 +447,7 @@ def barang_datang_konfirmasi(request, pk):
                 messages.success(request,"Barang datang berhasil dikonfirmasi")
                 return redirect('pemesanan_list')
 
-        return render(request, 'barang_datang_form.html', {
+        return render(request, 'barang_datang.html', {
             'form': form,
             'pemesanan': pemesanan,
             'role' :'karyawan',
@@ -488,8 +480,8 @@ def laporan_keuangan(request):
     if tanggal_input:
         tanggal_filter = tanggal_input
     else:
-        tanggal_filter = timezone.now().date()
-
+        tanggal_filter = timezone.now().date()    
+    
     transaksi = TransaksiKeuangan.objects.filter(tanggal__date=tanggal_filter).order_by('-tanggal')
     pemasukan = transaksi.filter(jenis='masuk').aggregate(total=Sum('total'))['total'] or 0
     pengeluaran = transaksi.filter(jenis='keluar').aggregate( total=Sum('total'))['total'] or 0
@@ -608,9 +600,8 @@ def tambah_ke_keranjang(request):
             return redirect('kasir')
 
         keranjang = request.session.get('keranjang', [])
-
         subtotal = barang.harga * jumlah
-
+        
         keranjang.append({
             'kode': barang.kode_barang,
             'nama': barang.nama_barang,
@@ -693,4 +684,5 @@ def proses_bayar(request):
     kembalian = uang_bayar - total
     request.session['keranjang'] = []
     return redirect('kasir')
+
 

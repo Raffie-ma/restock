@@ -8,6 +8,13 @@
         {% for message in messages %}
             <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show">
                 {{ message }}
+                  <script>
+                    setTimeout(function () {
+                        document.querySelectorAll('.alert').forEach(function (alert) {
+                            alert.remove();
+                        });
+                    }, 3000);
+                  </script>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         {% endfor %}
@@ -40,7 +47,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-8">
             <div class="card shadow-sm border-0 rounded-4">
                 <div class="card-body">
@@ -65,8 +71,7 @@
                                     <td>Rp {{ item.harga|intcomma }}</td>
                                     <td>Rp {{ item.subtotal|intcomma }}</td>
                                     <td>
-                                        <a href="{% url 'hapus_dari_keranjang' forloop.counter0 %}"
-                                           class="btn btn-sm btn-danger">
+                                        <a href="{% url 'hapus_dari_keranjang' forloop.counter0 %}"class="btn btn-sm btn-danger">
                                            x
                                         </a>
                                     </td>
@@ -81,11 +86,9 @@
                             </tbody>
                         </table>
                     </div>
-
                     <h4 class="text-end fw-bold mt-3">
                         Total: Rp {{ total|intcomma }}
                     </h4>
-
                     <form id="formBayar"method="POST"action="{% url 'proses_bayar' %}">
                         {% csrf_token %}
                         <input type="hidden"name="uang_bayar"id="uang_bayar">
@@ -104,7 +107,17 @@
 document.getElementById('formBayar').addEventListener('submit', async function(e) {
 
     e.preventDefault();
+
     let total = {{ total }};
+
+    if (total <= 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Keranjang Kosong',
+            text: 'Silakan tambahkan barang terlebih dahulu.'
+        });
+        return;
+    }
     const { value: bayar } = await Swal.fire({
     title: '<h3 style="font-weight:bold;">PEMBAYARAN</h3>',
 
