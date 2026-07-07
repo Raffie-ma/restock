@@ -3,7 +3,6 @@
 
 <div class="container mt-4">
     <h2 class="mb-4 fw-bold">Tambah Retur Barang</h2>
-
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="container mt-4">
@@ -35,7 +34,7 @@
                         <option value=""></option>
                         {% for barang in barangs %}
                             <option value="{{ barang.kode_barang }}">
-                                {{ barang.nama_barang }} 
+                                {{ barang.nama_barang }} || stock: {{ barang.stock}} 
                             </option>
                         {% endfor %}
                     </select>

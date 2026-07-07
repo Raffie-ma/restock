@@ -6,19 +6,20 @@
     <h3 class="mb-4 fw-bold">Kasir Penjualan</h3>
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show">
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}">
                 {{ message }}
-                  <script>
-                    setTimeout(function () {
-                        document.querySelectorAll('.alert').forEach(function (alert) {
-                            alert.remove();
-                        });
-                    }, 3000);
-                  </script>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+
+            <script>
+                setTimeout(function () {
+                    document.querySelectorAll('.alert').forEach(function (alert) {
+                        alert.remove();
+                    });
+                },3000);
+            </script>
         {% endfor %}
     {% endif %}
+
     <div class="row g-4">
         <div class="col-md-4">
             <div class="card shadow-sm border-0 rounded-4">
@@ -26,31 +27,36 @@
                     <form method="POST" action="{% url 'tambah_keranjang' %}">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label">Pilih Barang</label>
-                            <select name="barang" class="form-select select2">
-                                <option value="">Pilih Barang</option>
+                            <label class="form-label fw-semibold">
+                                Pilih Barang
+                            </label>
+                            <select name="barang"class="form-select select2"equired>
+                                <option value=""></option>
                                 {% for barang in barangs %}
                                     <option value="{{ barang.kode_barang }}">
-                                        {{ barang.nama_barang }} - Rp {{ barang.harga|intcomma }} (stok {{ barang.stock }})
+                                        {{ barang.nama_barang }} | Stok : {{ barang.stock }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Jumlah</label>
+                            <label class="form-label">
+                                Jumlah
+                            </label>
                             <input type="number"name="jumlah"class="form-control" min="1"required>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button class="btn btn-primary w-100">
                             Tambah
                         </button>
                     </form>
                 </div>
             </div>
         </div>
+
         <div class="col-md-8">
             <div class="card shadow-sm border-0 rounded-4">
                 <div class="card-body">
-                    <h5 class="mb-3 fw-semibold">Keranjang</h5>
+                    <h5 class="fw-semibold mb-3">Keranjang</h5>
                     <div class="table-responsive">
                         <table class="table align-middle">
                             <thead class="table-dark">
@@ -62,39 +68,32 @@
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
-
                             <tbody>
-                                {% for item in keranjang %}
+                            {% for item in keranjang %}
                                 <tr>
                                     <td>{{ item.nama }}</td>
                                     <td>{{ item.jumlah }}</td>
                                     <td>Rp {{ item.harga|intcomma }}</td>
                                     <td>Rp {{ item.subtotal|intcomma }}</td>
                                     <td>
-                                        <a href="{% url 'hapus_dari_keranjang' forloop.counter0 %}"class="btn btn-sm btn-danger">
-                                           x
-                                        </a>
+                                        <a href="{% url 'hapus_dari_keranjang' forloop.counter0 %}"class="btn btn-danger btn-sm">x</a>
                                     </td>
                                 </tr>
-                                {% empty %}
+                            {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted">
-                                        Keranjang kosong
-                                    </td>
+                                    <td colspan="5"class="text-center text-muted"> Keranjang kosong</td>
                                 </tr>
-                                {% endfor %}
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     <h4 class="text-end fw-bold mt-3">
-                        Total: Rp {{ total|intcomma }}
+                        Total : Rp {{ total|intcomma }}
                     </h4>
                     <form id="formBayar"method="POST"action="{% url 'proses_bayar' %}">
                         {% csrf_token %}
-                        <input type="hidden"name="uang_bayar"id="uang_bayar">
-                        <button type="submit"class="btn btn-success w-100 mt-2">
-                            Proses Pembayaran
-                        </button>
+                        <input type="hidden"id="uang_bayar"name="uang_bayar">
+                        <button class="btn btn-success w-100 mt-2"> Proses Pembayaran </button>
                     </form>
                 </div>
             </div>
@@ -102,97 +101,119 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
-document.getElementById('formBayar').addEventListener('submit', async function(e) {
+$(document).ready(function(){
+    $('.select2').select2({
+        placeholder:"Ketik nama barang...",
+        allowClear:true,
+        width:'100%'
 
+    });
+
+});
+</script>
+<style>
+
+.select2-container{
+    width:100%!important;
+}
+
+.select2-selection--single{
+    height:38px!important;
+    padding-top:4px;
+}
+
+.select2-selection__arrow{
+    height:38px!important;
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+document.getElementById('formBayar').addEventListener('submit', async function(e){
     e.preventDefault();
+    let total={{ total }};
+    if(total<=0){
 
-    let total = {{ total }};
-
-    if (total <= 0) {
         Swal.fire({
-            icon: 'warning',
-            title: 'Keranjang Kosong',
-            text: 'Silakan tambahkan barang terlebih dahulu.'
+            icon:'warning',
+            title:'Keranjang Kosong',
+            text:'Silakan tambahkan barang terlebih dahulu.'
         });
         return;
     }
-    const { value: bayar } = await Swal.fire({
-    title: '<h3 style="font-weight:bold;">PEMBAYARAN</h3>',
 
-    html: `
-        <div style="text-align:left;font-size:18px;margin-top:10px;">
-            <hr>
-            <div style="display:flex;justify-content:space-between; margin-bottom:15px;">
-                <span>Total Harga</span>
-                <span><b>Rp ${total.toLocaleString()}</b></span>
-            </div>
-            <hr>
+    const {value:bayar}=await Swal.fire({
+        title:'<h3 style="font-weight:bold;">PEMBAYARAN</h3>',
+        html:`
+        <hr>
+        <div style="display:flex;justify-content:space-between">
+            <span>Total Harga</span>
+            <b>Rp ${total.toLocaleString()}</b>
         </div>
-    `,
-    input: 'number',
-    inputLabel: 'Masukkan Nominal Pembayaran',
-    inputPlaceholder: 'Masukan Nominal',
-    confirmButtonText: 'Bayar',
-    cancelButtonText: 'Batal',
-    showCancelButton: true,
-    inputAttributes: {
-        min: total
-    }
-});
-    if (!bayar) {
-        return;
-    }
+        <hr>
+        `,
+        input:'number',
+        inputLabel:'Masukkan Nominal Pembayaran',
+        confirmButtonText:'Bayar',
+        cancelButtonText:'Batal',
+        showCancelButton:true,
+        inputAttributes:{
+            min:total
+        }
+    });
 
-    let nominal = parseInt(bayar);
+    if(!bayar) return;
+    let nominal=parseInt(bayar);
+    if(nominal<total){
 
-    if (isNaN(nominal)) {
         Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Nominal tidak valid!'
+            icon:'error',
+            title:'Uang Kurang',
+            text:'Nominal pembayaran kurang.'
         });
+
         return;
+
     }
 
-    if (nominal < total) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Uang Kurang',
-            text: 'Nominal pembayaran kurang!'
-        });
-        return;
-    }
-
-    document.getElementById('uang_bayar').value = nominal;
-    let kembalian = nominal - total;
+    document.getElementById('uang_bayar').value=nominal;
+    let kembalian=nominal-total;
     await Swal.fire({
-    icon: 'success',
-    title: 'Pembayaran Berhasil',
-    html: `
-        <div style="text-align:left;font-size:18px;line-height:1.8;">
-            <hr>
-            <div style="display:flex; justify-content:space-between;">
-                <span>Total</span>
-                <span>: Rp ${total.toLocaleString()}</span>
-            </div>
+        icon:'success',
+        title:'Pembayaran Berhasil',
 
-            <div style="display:flex; justify-content:space-between;">
-                <span>Bayar</span>
-                <span>: Rp ${nominal.toLocaleString()}</span>
-            </div>
-
-            <div style="display:flex; justify-content:space-between;">
-                <span>Kembalian</span>
-                <span>: Rp ${kembalian.toLocaleString()}</span>
-            </div>
-            <hr>
+        html:`
+        <hr>
+        <div style="display:flex;justify-content:space-between">
+            <span>Total</span>
+            <span>Rp ${total.toLocaleString()}</span>
         </div>
-    `
-});
+
+        <div style="display:flex;justify-content:space-between">
+            <span>Bayar</span>
+            <span>Rp ${nominal.toLocaleString()}</span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between">
+            <span>Kembalian</span>
+            <span>Rp ${kembalian.toLocaleString()}</span>
+        </div>
+        <hr>
+        `
+
+    });
+
     this.submit();
 
-})
+});
+
 </script>
+
 {% endblock %}
