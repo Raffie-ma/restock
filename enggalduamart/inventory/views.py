@@ -285,7 +285,7 @@ def barang_delete(request, kode_barang):
         barang.delete()
         return redirect('barang_list')
 
-    return render(request, 'barang_confirm_delete.html', {
+    return render(request, 'barang_delete.html', {
         'barang': barang,
         'role' :'admin'
     })
