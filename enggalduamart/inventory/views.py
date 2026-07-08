@@ -22,22 +22,22 @@ def login_view(request):
         password = request.POST.get('password', '').strip()
 
         if not username:
-            return render(request,'login.html',{'error': 'Username harus di isi.'})
+            return render(request, 'login.html', {'error': 'Username harus diisi.'})
 
         if not password:
-            return render(
-                request,'login.html',{'error': 'Password harus di isi.'} )
+            return render(request, 'login.html', {'error': 'Password harus diisi.','username': username})
 
         try:
-            user = User.objects.get(username=username,password=password)
+            user = User.objects.get(username=username)
+            if user.password != password:
+                return render(request, 'login.html', {'error': 'Password salah.','username': username})
             request.session['user_id'] = user.id
             request.session['role'] = user.role
 
             return redirect('dashboard')
 
         except User.DoesNotExist:
-            return render(
-                request,'login.html',{'error': 'Username atau password salah.','username': username})
+            return render(request, 'login.html', {'error': 'Username tidak ditemukan.'})
 
     return render(request, 'login.html')
 
