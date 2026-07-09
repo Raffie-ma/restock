@@ -199,16 +199,7 @@ def barang_create(request):
                     barang.kategori = kategori
 
                 barang.save()
-
-                if barang.stock <= barang.batas_minimal:
-                    karyawan_list = User.objects.filter(role='karyawan')
-                    for user in karyawan_list:
-                        Notifikasi.objects.get_or_create(
-                            user=user,
-                            barang=barang,
-                            pesan=f"Stok {barang.nama_barang} menipis ({barang.stock})",
-                            dibaca=False
-                        )
+                barang.cek_dan_buat_notifikasi()
 
                 messages.success( request,"Barang berhasil ditambahkan.")
                 return redirect('barang_create')
