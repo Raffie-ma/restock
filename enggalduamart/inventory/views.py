@@ -636,7 +636,6 @@ def proses_bayar(request):
         return redirect('kasir')
 
     uang_bayar = int(request.POST.get('uang_bayar', 0))
-
     total = 0
     total_barang = 0
     daftar_barang = []
@@ -648,9 +647,13 @@ def proses_bayar(request):
             messages.error(request,f"Stok {barang.nama_barang} tidak cukup")
             return redirect('kasir')
 
+        stok_lama = barang.stock
         barang.stock -= item['jumlah']
         barang.save()
 
+        if stok_lama > barang.batas_minimal and barang.stock <= barang.batas_minimal:
+            barang.cek_dan_buat_notifikasi()
+            
         DetailPenjualan.objects.create(
             transaksi=transaksi,
             barang=barang,
@@ -664,7 +667,6 @@ def proses_bayar(request):
 
         daftar_barang.append(f"{barang.nama_barang} {item['jumlah']}x")
 
-   
     if uang_bayar < total:
         messages.error(request, "Uang pembayaran kurang")
         return redirect('kasir')
