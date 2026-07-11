@@ -3,14 +3,6 @@ from .models import Pemesanan, Barang
 
 class BarangDatangForm(forms.ModelForm):
 
-    jumlah_bagus = forms.IntegerField(
-        min_value=0,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 0
-        })
-    )
-
     jumlah_rusak = forms.IntegerField(
         min_value=0,
         widget=forms.NumberInput(attrs={
@@ -23,15 +15,14 @@ class BarangDatangForm(forms.ModelForm):
         model = Pemesanan
         fields = [
             'jumlah_datang',
-            'jumlah_bagus',
             'jumlah_rusak',
             'keterangan'
         ]
 
         widgets = {
-            'jumlah_datang': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1
+              
+              'jumlah_datang': forms.NumberInput(attrs={
+                'class': 'form-control'
             }),
 
             'keterangan': forms.Textarea(attrs={
@@ -49,7 +40,7 @@ class BarangForm(forms.ModelForm):
         fields = [
             'nama_barang',
             'stock',
-            'harga'
+            'harga',
         ]
 
         widgets = {
@@ -57,6 +48,7 @@ class BarangForm(forms.ModelForm):
             'nama_barang': forms.TextInput(attrs={
                 'class': 'form-control'
             }),
+
 
             'stock': forms.NumberInput(attrs={
                 'class': 'form-control',

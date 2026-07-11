@@ -26,16 +26,6 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Barang Bagus</label>
-                {{ form.jumlah_bagus }}
-                {% for error in form.jumlah_bagus.errors %}
-                    <div class="text-danger small">
-                        {{ error }}
-                    </div>
-                {% endfor %}
-            </div>
-
-            <div class="mb-3">
                 <label class="form-label">Barang Rusak</label>
                 {{ form.jumlah_rusak }}
                 {% for error in form.jumlah_rusak.errors %}

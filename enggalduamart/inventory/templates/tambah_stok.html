@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>Tambah Stok</h3>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show">
+            {{ message }}
+            <script>
+            setTimeout(function(){
+                document.querySelectorAll('.alert').forEach(function(item){
+                    item.remove();
+                });
+            },3000);
+            </script>
+        </div>
+    {% endfor %}
+{% endif %}
+<div class="card">
+    <div class="card-body">
+
+        <p>
+            <b>{{ barang.nama_barang }}</b>
+        </p>
+
+        <p>
+            Stok sekarang :
+            <b>{{ barang.stock }}</b>
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <label>Jumlah Barang Datang</label>
+
+            <input
+                type="number"
+                name="jumlah"
+                class="form-control"
+                required
+            >
+
+            <br>
+            <button class="btn btn-success">Simpan</button>
+            <a href="{% url 'barang_list' %}"class="btn btn-secondary">Batal</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

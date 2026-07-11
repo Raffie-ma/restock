@@ -100,35 +100,48 @@
         </div>
 
          <div class="card">
-      <div class="card-header">
-        📊 Barang Paling Sering Dibeli bulan ini
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-sm mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Barang</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-          {% for item in barang_terlaris %}
-            <tr>
-              <td>{{ item.barang__nama_barang }}</td>
-              <td>{{ item.total_terjual }}</td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan="2" class="text-center text-muted">
-                Belum ada data penjualan
-              </td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
+    <div class="card-header">
+        📊 Barang Paling Sering Dibeli
     </div>
-  </div>
+    <div class="card-body">
+        <form method="GET" class="row g-2 mb-3">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">📅 Pilih Bulan</label>
+                <input
+                    type="month"
+                    name="bulan"
+                    class="form-control"
+                    value="{{ tahun }}-{{ bulan|stringformat:'02d' }}"
+                >
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Barang</th>
+                        <th>Total Terjual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in barang_terlaris %}
+                    <tr>
+                        <td>{{ item.barang__nama_barang }}</td>
+                        <td>{{ item.total_terjual }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted"> Belum ada data penjualan</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

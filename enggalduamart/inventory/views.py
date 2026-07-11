@@ -41,7 +41,6 @@ def login_view(request):
 
     return render(request, 'login.html')
 
-
 def logout_view(request):
     request.session.flush()
     return redirect('login')
@@ -83,19 +82,23 @@ def dashboard(request):
     total_stok = Barang.objects.aggregate(total=Sum('stock'))['total'] or 0
     total_nilai = Barang.objects.annotate(nilai=ExpressionWrapper( F('stock') * F('harga'),output_field=DecimalField())).aggregate(total=Sum('nilai'))['total'] or 0
     today = timezone.now()
-    barang_terlaris = (DetailPenjualan.objects.filter(transaksi__tanggal__month=today.month,transaksi__tanggal__year=today.year).values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5])
+    bulan_input = request.GET.get('bulan')
+
+    if bulan_input:
+        tahun, bulan = bulan_input.split('-')
+        tahun = int(tahun)
+        bulan = int(bulan)
+    else:
+        tahun = today.year
+        bulan = today.month
+    barang_terlaris = (DetailPenjualan.objects.filter( transaksi__tanggal__month=bulan,transaksi__tanggal__year=tahun).values('barang__nama_barang').annotate(total_terjual=Sum('jumlah')).order_by('-total_terjual')[:5])
 
     if pencarian:
         barang_list = barang_list.filter(
             Q(nama_barang__icontains=pencarian)|Q(kode_barang__icontains=pencarian))
             
-    
     if filter_barang == 'menipis':
-        barang_list = barang_list.filter(
-        stock__lte=F('batas_minimal'),
-        stock__gt=0
-    )
-    
+        barang_list = barang_list.filter(stock__lte=F('batas_minimal'),stock__gt=0)
     
     context = {
         'role': role,
@@ -109,7 +112,9 @@ def dashboard(request):
         'total_nilai': total_nilai,
         'filter_barang' : filter_barang,
         'barang_terlaris': barang_terlaris,
-        'pemasukan':pemasukan
+        'pemasukan':pemasukan,
+        'bulan': bulan,
+        'tahun': tahun,
     }
 
     if role == 'admin':
@@ -156,7 +161,7 @@ def barang_list(request):
 
     if filter_status == 'menipis':
         barang_qs = barang_qs.filter(stock__lte=F('batas_minimal'),stock__gt=0)
-
+    
     context = {
         'role': request.session.get('role'),
         'barang_list': barang_qs,
@@ -175,6 +180,7 @@ def barang_create(request):
         nama_kategori_baru = request.POST.get('nama_kategori_baru', '' ).strip()
         kode_awal_baru = request.POST.get('kode_awal_baru', '').strip()
         kategori_id = request.POST.get('kategori')
+
 
         if not kategori_id and not (nama_kategori_baru and kode_awal_baru):
             messages.error(request,"Pilih kategori atau buat kategori baru.")
@@ -276,7 +282,7 @@ def barang_delete(request, kode_barang):
         barang.delete()
         return redirect('barang_list')
 
-    return render(request, 'barang_delete.html', {
+    return render(request, 'barang_confirm_delete.html', {
         'barang': barang,
         'role' :'admin'
     })
@@ -402,16 +408,19 @@ def barang_datang_konfirmasi(request, pk):
     elif request.method == 'POST':
 
         form = BarangDatangForm(request.POST, instance=pemesanan)
-
         if form.is_valid():
-
             jumlah_datang = form.cleaned_data['jumlah_datang']
-            jumlah_bagus = form.cleaned_data['jumlah_bagus']
             jumlah_rusak = form.cleaned_data['jumlah_rusak']
             keterangan = form.cleaned_data['keterangan']
 
             if jumlah_datang <= 0:
                 form.add_error('jumlah_datang','Jumlah datang harus lebih dari 0')
+            
+            elif jumlah_rusak > jumlah_datang:
+                form.add_error(
+                    'jumlah_rusak',
+                    'Jumlah barang rusak tidak boleh melebihi jumlah barang datang.'
+                )
 
             else:
                 pemesanan = form.save(commit=False)
@@ -419,7 +428,7 @@ def barang_datang_konfirmasi(request, pk):
                 pemesanan.status_2 = 'datang'
                 pemesanan.save()
                 barang = pemesanan.barang
-                barang.stock += jumlah_bagus
+                barang.stock += (jumlah_datang - jumlah_rusak)
                 barang.save()
 
                 if jumlah_rusak > 0:
@@ -435,7 +444,6 @@ def barang_datang_konfirmasi(request, pk):
                         status='disetujui'
                     )
 
-                messages.success(request,"Barang datang berhasil dikonfirmasi")
                 return redirect('pemesanan_list')
 
         return render(request, 'barang_datang.html', {
@@ -581,7 +589,6 @@ def kasir(request):
 def tambah_ke_keranjang(request):
 
     if request.method == "POST":
-
         kode_barang = request.POST.get('barang')
         jumlah = int(request.POST.get('jumlah'))
         barang = get_object_or_404(Barang, kode_barang=kode_barang)
@@ -679,3 +686,29 @@ def proses_bayar(request):
     return redirect('kasir')
 
 
+@require_login
+@require_role('admin')
+def tambah_stok(request, pk):
+    barang = get_object_or_404(Barang, pk=pk)
+
+    if request.method == 'POST':
+        try:
+            jumlah = int(request.POST.get('jumlah', 0))
+
+            if jumlah <= 0:
+                messages.error(request, "Jumlah stok harus lebih dari 0.")
+                return redirect('tambah_stok', pk=barang.kode_barang)
+
+            barang.stock += jumlah
+            barang.save()
+
+            messages.success(request, "Stok berhasil ditambahkan.")
+
+        except ValueError:
+            messages.error(request, "Jumlah stok tidak valid.")
+            return redirect('tambah_stok', pk=barang.kode_barang)
+
+    return render(request, 'tambah_stok.html', {
+        'barang': barang,
+        'role': request.session.get('role'),
+    })

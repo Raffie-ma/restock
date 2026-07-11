@@ -43,22 +43,21 @@
 
 <div class="row">
   <div class="col-md-8">
-    <div class="card mb-3">
+    <div class="card mb-4">
       <div class="card-header d-flex justify-content-between">
         <span>Daftar Barang</span>
-
         <form class="d-flex align-items-center gap-2" method="get">
-        <input class="form-control form-control-sm"
-               type="search"
-               name="pencarian"
-               value="{{ pencarian }}"
-               placeholder="Cari nama / kode"
-              style="max-width: 220px;">
-        <button class="btn btn-sm btn-outline-primary">Cari</button>
-        <a href="?filter=menipis&q={{ q }}"class="btn btn-sm btn-outline-danger ms-2"> Menipis</a>
-        <a href="/"class="btn btn-sm btn-outline-secondary">Semua</a>
-
-</form>
+          <input class="form-control form-control-sm"
+                 type="search"
+                 name="pencarian"
+                 value="{{ pencarian }}"
+                 placeholder="Cari nama / kode"
+                 style="max-width: 220px;">
+              <button class="btn btn-sm btn-outline-primary">Cari</button>
+            <a href="?filter=menipis&q={{ q }}"class="btn btn-sm btn-outline-danger ms-2"> Menipis</a>
+          <a href="/"class="btn btn-sm btn-outline-secondary">Semua</a>
+        </form>
+     
       </div>
       <div class="card-body p-0">
         <table class="table table-bordered">

@@ -14,7 +14,8 @@ urlpatterns = [
     path('barang/<int:kode_barang>/edit/', views.barang_update, name='barang_update'),
     path('barang/<int:kode_barang>/delete/', views.barang_delete, name='barang_delete'),
     path('barang/datang/<int:pk>/',views.barang_datang_konfirmasi,name='barang_datang_konfirmasi'),
-  
+    path('barang/<int:pk>/tambah-stok/',views.tambah_stok, name='tambah_stok'),
+
     path('pemesanan/', views.pemesanan_list, name='pemesanan_list'),
     path('pemesanan/tambah/<int:kode_barang>/', views.pemesanan_create, name='pemesanan_create'),
     path('pemesanan/verifikasi/', views.pemesanan_verifikasi_list,name='pemesanan_verifikasi_list'),

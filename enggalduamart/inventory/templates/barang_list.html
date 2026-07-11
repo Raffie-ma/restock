@@ -1,68 +1,112 @@
 {% extends 'base.html' %}
+{% load humanize %}
 {% block title %}Daftar Barang{% endblock %}
 
 {% block content %}
-<h3 class="mb-3">Daftar Barang</h3>
+
+<h3 class="mb-3 fw-bold">Daftar Barang</h3>
+
 {% if messages %}
-  <div id="notif-container">
+<div id="notif-container">
     {% for message in messages %}
-      {% if 'success_barang' in message.tags or 'success_batas' in message.tags %}
-        <div class="alert alert-success fade show mb-2">
-          {{ message }}
-             <script>
-              setTimeout(function () {
-                  document.querySelectorAll('.alert').forEach(function (alert) {
-                      alert.remove();
-                  });
-              }, 3000);
-            </script>
-        </div>
-      {% endif %}
+        {% if 'success_barang' in message.tags or 'success_batas' in message.tags %}
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ message }}
+                <button class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endif %}
     {% endfor %}
-  </div>
-{% endif %}
-<div class="row mb-3">
-  <div class="col-md-6">
-    <form class="d-flex" method="get">
-      <input class="form-control me-2" type="search" name="q"
-             placeholder="Cari nama / kode" value="{{ q }}">
-      <button class="btn btn-outline-primary" type="submit">Cari</button>
-    </form>
-  </div>
-  <div class="col-md-6 text-end">
-    <a href="{% url 'barang_create' %}" class="btn btn-primary btn-sm">+ Tambah Barang</a>
-  </div>
 </div>
 
-<div class="card">
-  <div class="card-body p-0">
-    <table class="table table-bordered">
-      <thead class="table-dark">
-        <tr>
-          <th>Kode</th>
-          <th>Nama</th>
-          <th>Stok</th>
-          <th>Harga</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for b in barang_list %}
-        <tr class="{% if b.is_low_stock %}table-danger{% endif %}">
-          <td>{{ b.kode_barang }}</td>
-          <td>{{ b.nama_barang }}</td>
-          <td><span class="badge {% if b.is_low_stock %}bg-danger{% else %}bg-success{% endif %}">{{ b.stock }}</span> </td>
-          <td>Rp.{{ b.harga }}</td>
-          <td>
-            <a href="{% url 'barang_update' b.kode_barang %}" class="btn btn-sm btn-warning">Edit</a>
-            <a href="{% url 'barang_delete' b.kode_barang %}" class="btn btn-sm btn-danger">Hapus</a>
-          </td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="6" class="text-center">Belum ada barang.</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
+<script>
+setTimeout(function(){
+    document.querySelectorAll('.alert').forEach(function(item){
+        item.remove();
+    });
+},3000);
+</script>
+
+{% endif %}
+
+<div class="row mb-3">
+
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input
+                type="search"
+                class="form-control me-2"
+                name="q"
+                placeholder="Cari nama / kode barang..."
+                value="{{ q }}"
+            >
+
+            <button class="btn btn-outline-primary">Cari </button>
+        </form>
+    </div>
+
+    <div class="col-md-6 text-end">
+        <a href="{% url 'barang_create' %}"class="btn btn-primary"><i class="bi bi-plus-circle"></i> Tambah Barang</a>
+    </div>
 </div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm align-middle">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th style="width:110px;">Kode</th>
+                        <th style="width:150px;">Kategori</th>
+                        <th>Nama Barang</th>
+                        <th style="width:90px;">Stok</th>
+                        <th style="width:150px;">Harga</th>
+                        <th style="width:170px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for b in barang_list %}
+                    <tr class="{% if b.is_low_stock %}table-danger{% endif %}">
+                        <td class="text-center">
+                            {{ b.kode_barang }}
+                        </td>
+                        <td>
+                            {{ b.kategori.nama_kategori }}
+                        </td>
+                        <td>
+                            {{ b.nama_barang }}
+                        </td>
+                        <td class="text-center">
+                            {% if b.is_low_stock %}
+                                <span class="badge rounded-pill bg-danger">
+                                    {{ b.stock }}
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-success">
+                                    {{ b.stock }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            Rp {{ b.harga|intcomma }}
+                        </td>
+                        <td class="text-center">
+
+                            <a href="{% url 'barang_update' b.kode_barang %}" class="btn btn-warning btn-sm"title="Edit"><i class="bi bi-pencil-square"></i></a>
+                            <a href="{% url 'tambah_stok' b.kode_barang %}" class="btn btn-success btn-sm"title="Tambah Stok"><i class="bi bi-plus-circle"></i></a>
+                            <a href="{% url 'barang_delete' b.kode_barang %}"class="btn btn-danger btn-sm"title="Hapus"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            Belum ada data barang.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
