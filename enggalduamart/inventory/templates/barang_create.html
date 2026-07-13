@@ -3,29 +3,29 @@
 {% block content %}
 
 <div class="container mt-4">
-<h3 class="mb-3">{{ judul }}</h3>
-<div class="card shadow-sm">
-<div class="card-body">
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert
-            {% if message.tags == 'error' %}
-                alert-danger
-            {% else %}
-                alert-{{ message.tags }}
-            {% endif %} mt-3 fw-semibold"
-            role="alert">
-            {{ message }}
-            <script>
-              setTimeout(function () {
-                  document.querySelectorAll('.alert').forEach(function (alert) {
-                      alert.remove();
-                  });
-              }, 3000);
-            </script>
-        </div>
-    {% endfor %}
-{% endif %}
+  <h3 class="mb-3">{{ judul }}</h3>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        {% if messages %}
+            {% for message in messages %}
+              <div class="alert
+                  {% if message.tags == 'error' %}
+                      alert-danger
+                  {% else %}
+                      alert-{{ message.tags }}
+                  {% endif %} mt-3 fw-semibold"
+                  role="alert">
+                  {{ message }}
+                  <script>
+                    setTimeout(function () {
+                        document.querySelectorAll('.alert').forEach(function (alert) {
+                            alert.remove();
+                        });
+                    }, 3000);
+                  </script>
+              </div>
+          {% endfor %}
+      {% endif %}
 
 <form method="post">
 {% csrf_token %}
@@ -43,21 +43,11 @@
     <div class="row">
       <div class="col-md-6 mb-3">
         <label class="form-label">Nama Kategori</label>
-          <input
-            type="text"
-            name="nama_kategori_baru"
-            class="form-control"
-            placeholder="Contoh: Minuman"
-          >
+          <input type="text"name="nama_kategori_baru"class="form-control"placeholder="Contoh: Minuman">
       </div>
       <div class="col-md-6 mb-3">
         <label class="form-label">Kode Awal</label>
-          <input
-            type="text"
-            name="kode_awal_baru"
-            class="form-control"
-            placeholder="Contoh: 354"
-          >
+          <input type="text" name="kode_awal_baru"class="form-control"placeholder="Contoh: 354">
       </div>
     </div>
     <small class="text-muted">
@@ -71,6 +61,7 @@
             {{ kategori.nama_kategori }}
           </option>
         {% endfor %}
+  
     </select>
     <br>
     {% endif %}
@@ -79,7 +70,7 @@
         <label class="form-label">Nama Barang</label>
         {{ form.nama_barang }}
       </div>
-
+  
       <div class="mb-3">
         <label class="form-label">Stock</label>
         {{ form.stock }}
@@ -91,7 +82,7 @@
       <button type="submit" class="btn btn-primary">
         Simpan
       </button>
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+      <a href="{% url 'barang_list' %}" class="btn btn-secondary">
         Batal
       </a>
     </form>

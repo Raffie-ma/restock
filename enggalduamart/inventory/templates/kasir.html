@@ -4,21 +4,26 @@
 
 <div class="container mt-4">
     <h3 class="mb-4 fw-bold">Kasir Penjualan</h3>
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}">
-                {{ message }}
-            </div>
-
-            <script>
-                setTimeout(function () {
-                    document.querySelectorAll('.alert').forEach(function (alert) {
-                        alert.remove();
-                    });
-                },3000);
-            </script>
-        {% endfor %}
-    {% endif %}
+     {% if messages %}
+            {% for message in messages %}
+              <div class="alert
+                  {% if message.tags == 'error' %}
+                      alert-danger
+                  {% else %}
+                      alert-{{ message.tags }}
+                  {% endif %} mt-3 fw-semibold"
+                  role="alert">
+                  {{ message }}
+                  <script>
+                    setTimeout(function () {
+                        document.querySelectorAll('.alert').forEach(function (alert) {
+                            alert.remove();
+                        });
+                    }, 3000);
+                  </script>
+              </div>
+          {% endfor %}
+      {% endif %}
 
     <div class="row g-4">
         <div class="col-md-4">
@@ -34,7 +39,7 @@
                                 <option value=""></option>
                                 {% for barang in barangs %}
                                     <option value="{{ barang.kode_barang }}">
-                                        {{ barang.nama_barang }} | Stok : {{ barang.stock }}
+                                        {{ barang.nama_barang }}   Rp.{{barang.harga}} | Stok : {{ barang.stock }}
                                     </option>
                                 {% endfor %}
                             </select>

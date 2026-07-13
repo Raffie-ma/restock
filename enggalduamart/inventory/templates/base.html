@@ -32,6 +32,23 @@
       background:#334155;
       color:#fff;
     }
+    .progress{
+    background:#edf2f7;
+    }
+
+    .progress-bar{
+        border-radius:20px;
+        transition:0.4s;
+    }
+
+    .card:hover{
+        transform:translateY(-2px);
+        transition:.3s;
+    }
+
+    .badge{
+        font-size:13px;
+    }
   </style>
 </head>
 
@@ -56,11 +73,11 @@
 
   {% if role == 'admin' %}
     <a href="{% url 'barang_list' %}">Kelola Barang</a>
-    <a href="{% url 'pemesanan_verifikasi_list' %}">Verifikasi Pesanan</a>
-    <a href="{% url 'daftar_retur' %}">Retur barang</a>
-    <a href="{% url 'laporan_barang_datang' %}">Riwayat Pemesanan</a>
+    <a href="{% url 'pemesanan_list' %}">Riwayat Pemesanan</a>
+    <a href="{% url 'daftar_retur' %}">Daftar Retur barang</a>
     <a href="{% url 'laporan_keuangan' %}">Riwayat Penjualan</a>
     <a href="{% url 'set_batas_minimal' %}">Setting Batas Minimal Barang</a>
+  
 
   {% endif %}
 

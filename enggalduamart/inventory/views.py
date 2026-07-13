@@ -282,7 +282,7 @@ def barang_delete(request, kode_barang):
         barang.delete()
         return redirect('barang_list')
 
-    return render(request, 'barang_confirm_delete.html', {
+    return render(request, 'barang_delete.html', {
         'barang': barang,
         'role' :'admin'
     })
@@ -367,7 +367,7 @@ def pemesanan_verifikasi(request, pk, aksi):
     pemesanan = get_object_or_404(Pemesanan, pk=pk)
 
     if pemesanan.status_2 != 'pending':
-        return redirect('pemesanan_verifikasi_list')
+        return redirect('pemesanan_list')
 
     if aksi == 'setuju':   
         pemesanan.status_2 = 'disetujui'
@@ -385,7 +385,7 @@ def pemesanan_verifikasi(request, pk, aksi):
         pemesanan.status_2 = 'ditolak'
         pemesanan.save()
 
-    return redirect('pemesanan_verifikasi_list')
+    return redirect('pemesanan_list')
 
 
 @require_login
