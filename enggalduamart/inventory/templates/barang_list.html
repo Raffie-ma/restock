@@ -59,6 +59,7 @@ setTimeout(function(){
                         <th style="width:150px;">Kategori</th>
                         <th>Nama Barang</th>
                         <th style="width:90px;">Stok</th>
+                        <th style="width:150px;">Modal</th>
                         <th style="width:150px;">Harga</th>
                         <th style="width:170px;">Aksi</th>
                     </tr>
@@ -86,6 +87,11 @@ setTimeout(function(){
                                 </span>
                             {% endif %}
                         </td>
+                        <td>{% if b.modal %}
+                                    Rp {{ b.modal }}
+                                {% else %}
+                                    Belum diisi
+                                {% endif %}</td>
                         <td>
                             Rp {{ b.harga|intcomma }}
                         </td>
