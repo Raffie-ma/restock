@@ -63,6 +63,7 @@
                             <th>Kode</th>
                             <th>Nama</th>
                             <th>Stok</th>
+                            <th>modal</th>
                             <th>Harga</th>
                         </tr>
                     </thead>
@@ -73,6 +74,11 @@
                             <td class="fw-semibold">{{ b.kode_barang }}</td>
                             <td>{{ b.nama_barang }}</td>
                             <td><span class="badge {% if b.is_low_stock %}bg-danger{% else %}bg-success{% endif %}">{{ b.stock }}</span> </td>
+                            <td>{% if b.modal %}
+                                    Rp{{ b.modal }}
+                                {% else %}
+                                    Belum diisi
+                                {% endif %}</td>
                             <td>Rp {{ b.harga  }}</td>
                         </tr>
                     {% empty %}

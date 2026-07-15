@@ -65,6 +65,7 @@
             <tr>
               <th>Kode</th>
               <th>Nama</th>
+              <th>Modal</th>
               <th>Harga</th>
               <th>Stok</th>
               <th>Aksi</th>
@@ -75,7 +76,12 @@
             <tr class="{% if b.is_low_stock %}table-danger{% endif %}">
               <td>{{ b.kode_barang }}</td>
               <td>{{ b.nama_barang }}</td>
-              <td>Rp.{{ b.harga }}</td>
+              <td>{% if b.modal %}
+                      Rp{{ b.modal|intcomma }}
+                   {% else %}
+                      Belum diisi
+                   {% endif %}</td>
+              <td>Rp.{{ b.harga|intcomma }}</td>
               <td><span class="badge {% if b.is_low_stock %}bg-danger{% else %}bg-success{% endif %}">{{ b.stock }}</span> </td>
               <td>
                 <a href="{% url 'pemesanan_create' b.kode_barang %}"

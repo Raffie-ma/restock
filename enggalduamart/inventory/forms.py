@@ -40,6 +40,7 @@ class BarangForm(forms.ModelForm):
         fields = [
             'nama_barang',
             'stock',
+            'modal',
             'harga',
         ]
 
@@ -49,6 +50,10 @@ class BarangForm(forms.ModelForm):
                 'class': 'form-control'
             }),
 
+            'modal': forms.NumberInput(attrs={
+                'class':'form-control',
+                'min':0
+            }),
 
             'stock': forms.NumberInput(attrs={
                 'class': 'form-control',

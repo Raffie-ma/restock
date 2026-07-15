@@ -30,6 +30,7 @@ class Barang(models.Model):
     stock = models.IntegerField()
     harga = models.DecimalField(max_digits=12, decimal_places=2)
     batas_minimal = models.IntegerField(default=15)
+    modal = models.DecimalField(max_digits=12,decimal_places=2,null=True,blank=True)
 
     def __str__(self):
         return self.nama_barang
@@ -39,64 +40,45 @@ class Barang(models.Model):
         return self.stock <= self.batas_minimal
 
     def generate_kode_barang(self):
-
         if not self.kategori_id:
             raise ValueError("Kategori belum dipilih")
-
         prefix = self.kategori.kode_awal
-
-        barang_terakhir = Barang.objects.filter(
-            kode_barang__startswith=prefix
-        ).order_by('-kode_barang').first()
-
+        
+        barang_terakhir = Barang.objects.filter(kode_barang__startswith=prefix).order_by('-kode_barang').first()
         if barang_terakhir:
-
             nomor_terakhir = str(
                 barang_terakhir.kode_barang
             )[len(prefix):]
 
             nomor_baru = int(nomor_terakhir) + 1
-
         else:
             nomor_baru = 1
-
         kode = int(f"{prefix}{nomor_baru:03d}")
-
         return kode
 
     def save(self, *args, **kwargs):
         if not self.kode_barang:
             if not self.kategori_id:
                 raise ValueError("Kategori belum dipilih")
-
             self.kode_barang = self.generate_kode_barang()
 
         is_new = self._state.adding
-
         if not is_new:
-
             try:
                 barang_lama = Barang.objects.get(pk=self.pk)
-
                 if (
                     barang_lama.stock > barang_lama.batas_minimal
                     and self.stock <= self.batas_minimal
                 ):
                     self.cek_dan_buat_notifikasi()
-
             except Barang.DoesNotExist:
                 pass
-
         super().save(*args, **kwargs)
 
     def cek_dan_buat_notifikasi(self):
-
         if self.is_low_stock:
-
             users = User.objects.all()
-
             for user in users:
-
                 Notifikasi.objects.get_or_create(
                     user=user,
                     barang=self,
@@ -121,7 +103,6 @@ class Pemesanan(models.Model):
     jumlah_rusak = models.IntegerField(null=True, blank=True, default=0) 
     keterangan = models.TextField(null=True, blank=True)
 
-    
     def __str__(self):
         return f"Pesan {self.barang.nama_barang} x {self.jumlah}"
     
@@ -168,17 +149,13 @@ class Retur(models.Model):
 
     barang = models.ForeignKey(Barang, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-
     jumlah = models.PositiveIntegerField()
     alasan = models.CharField(max_length=20, choices=ALASAN_CHOICES)
     keterangan = models.TextField(blank=True, null=True)
-
     tanggal_retur = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='menunggu')
 
-
     def save(self, *args, **kwargs):
-
         if self.pk:
             retur_lama = Retur.objects.get(pk=self.pk)
 
@@ -186,7 +163,6 @@ class Retur(models.Model):
                 retur_lama.status != 'disetujui'
                 and self.status == 'disetujui'
             ):
-
                 self.barang.stock -= self.jumlah
                 self.barang.save()
 

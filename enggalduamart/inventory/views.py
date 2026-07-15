@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import BarangDatangForm
+from .forms import BarangForm
 from django.db.models import Q 
 from django.db.models import F
 from django.http import HttpResponseForbidden
@@ -121,12 +122,6 @@ def dashboard(request):
         return render(request, 'dashboard_admin.html', context)
     else:
         return render(request, 'dashboard_karyawan.html', context)
-
-
-class BarangForm(forms.ModelForm):
-    class Meta:
-        model = Barang
-        fields = ['nama_barang', 'stock', 'harga']
 
 
 @require_login
@@ -257,11 +252,12 @@ def barang_update(request, kode_barang):
             return redirect('barang_list')
     else:
         form = BarangForm(instance=barang)
-
+    print(form.fields)
     return render(request, 'barang_create.html', {
         'form': form,
         'judul': 'Edit Barang',
-        'role' : request.session.get('role')
+        'role' : request.session.get('role'),
+        'kategori_list': KategoriBarang.objects.all(),
         })
 
 
@@ -282,7 +278,7 @@ def barang_delete(request, kode_barang):
         barang.delete()
         return redirect('barang_list')
 
-    return render(request, 'barang_delete.html', {
+    return render(request, 'barang_confirm_delete.html', {
         'barang': barang,
         'role' :'admin'
     })
@@ -485,6 +481,16 @@ def laporan_keuangan(request):
     pemasukan = transaksi.filter(jenis='masuk').aggregate(total=Sum('total'))['total'] or 0
     pengeluaran = transaksi.filter(jenis='keluar').aggregate( total=Sum('total'))['total'] or 0
     saldo = pemasukan - pengeluaran
+    total_modal = (DetailPenjualan.objects.filter(transaksi__tanggal__date=tanggal_filter)
+    .annotate(
+        subtotal_modal=ExpressionWrapper(
+            F('jumlah') * F('barang__modal'),
+            output_field=DecimalField(max_digits=15, decimal_places=2)
+        )
+    )
+    .aggregate(total=Sum('subtotal_modal'))['total']
+    or 0
+)
     total_transaksi = transaksi.count()
 
     return render(request, 'laporan_keuangan.html', {
@@ -494,6 +500,7 @@ def laporan_keuangan(request):
         'pengeluaran': pengeluaran,
         'saldo': saldo,
         'tanggal':tanggal_filter,
+        'total_modal': total_modal,
         'total_transaksi': total_transaksi,
     })
 
